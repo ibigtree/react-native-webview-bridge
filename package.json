@@ -1,0 +1,27 @@
+{
+  "name": "@ibigtree/react-native-webview-bridge",
+  "version": "0.0.1",
+  "description": "WebView - Web 사이 통신을 위한 Bridge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ibigtree/react-native-webview-bridge.git",
+    "baseUrl": "https://github.com/ibigtree/react-native-webview-bridge"
+  },
+  "peerDependencies": {
+    "react": "*"
+  },
+  "keywords": [
+    "react",
+    "react-native",
+    "react-native-webview"
+  ],
+  "author": {
+    "name": "Daehan Kim",
+    "email": "daehankim@ibigtree.kr"
+  },
+  "license": "MIT"
+}
