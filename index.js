@@ -26,8 +26,17 @@ export function handleWebViewOnMessage(e, connector) {
     return false;
   }
 
-  let method = message?.method;
-  let params = message?.params ?? {};
+  let method = null;
+  let params = null;
+
+  if (message) {
+      method = message.method;
+      params = message.params;
+
+      if (!params) {
+          params = {};
+      }
+  }
 
   if (method === '@react-native-webview-bridge/call') {
     connector({
@@ -48,7 +57,7 @@ export function useWebViewBridgeSession(handler) {
 
   const dispatchEvent = React.useCallback(
     (event) => {
-      if (name && webViewRef?.current) {
+      if (name && webViewRef && webViewRef.current) {
         dispatchEventToWebView(webViewRef.current, name, event);
       }
     },
@@ -57,7 +66,9 @@ export function useWebViewBridgeSession(handler) {
 
   const handleWebViewCall = React.useCallback(
     (event, sessionName, sessionWebViewRef) => {
-      switch (event?.type) {
+      let eventType = null;
+
+      switch (event ? event.type : null) {
         case '@react-native-webview-bridge/startSession': {
           setName(sessionName);
           setWebViewRef(sessionWebViewRef);
@@ -81,7 +92,7 @@ export function useWebViewBridgeSession(handler) {
 
   const session = React.useMemo(() => {
     return {
-      valid: name && webViewRef?.current,
+      valid: name && webViewRef && webViewRef.current,
       dispatchEvent,
       handler: handleWebViewCall,
     };
