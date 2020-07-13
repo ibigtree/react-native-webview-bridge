@@ -111,7 +111,7 @@ export function useWebViewBridge(bridgeName, eventCallback) {
   React.useEffect(() => {
     function onNativeProviderEvent(e) {
       const eventData = JSON.parse(e.data);
-      eventCallback(eventData.type, eventData.data);
+      eventCallback(eventData);
     }
 
     window.addEventListener(sessionName, onNativeProviderEvent);
@@ -137,8 +137,8 @@ export function useWebViewBridge(bridgeName, eventCallback) {
   return call;
 }
 
-function dispatchEventToWebView(webView, sessionName, type, event) {
-  const dispatchData = JSON.stringify({type, event});
+function dispatchEventToWebView(webView, sessionName, data) {
+  const dispatchData = JSON.stringify(data);
 
   webView.injectJavaScript(`
   (function() {
