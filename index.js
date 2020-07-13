@@ -144,7 +144,7 @@ function dispatchEventToWebView(webView, sessionName, data) {
   (function() {
     var event = new MessageEvent(
       '${sessionName}',
-      {data: '${dispatchData}'}
+      {data: String.raw\`${dispatchData}\`}
     );
 
     window.dispatchEvent(event);
