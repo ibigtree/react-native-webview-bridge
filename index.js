@@ -104,7 +104,7 @@ export function useWebViewBridgeSession(handler) {
 export function useWebViewBridge(bridgeName, eventCallback) {
   const sessionName = React.useMemo(
     () =>
-      `@react-native-webview-bridge/session/${bridgeName}-${new Date().getTime()}`,
+      `@react-native-webview-bridge/session/${bridgeName}`,
     [bridgeName],
   );
 
