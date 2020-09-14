@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
 export function useWebViewBridgeConnector(webViewRef, handlers) {
   const connector = React.useCallback(
-    ({handlerName, sessionName, event}) => {
+    ({ handlerName, sessionName, event }) => {
       const handler = handlers[handlerName];
 
       if (handler) {
@@ -11,7 +11,7 @@ export function useWebViewBridgeConnector(webViewRef, handlers) {
         console.error(`Handler missing: ${handlerName}`);
       }
     },
-    [handlers, webViewRef],
+    [handlers, webViewRef]
   );
 
   return connector;
@@ -30,15 +30,15 @@ export function handleWebViewOnMessage(e, connector) {
   let params = null;
 
   if (message) {
-      method = message.method;
-      params = message.params;
+    method = message.method;
+    params = message.params;
 
-      if (!params) {
-          params = {};
-      }
+    if (!params) {
+      params = {};
+    }
   }
 
-  if (method === '@react-native-webview-bridge/call') {
+  if (method === "@react-native-webview-bridge/call") {
     connector({
       handlerName: params.handlerName,
       sessionName: params.sessionName,
@@ -52,16 +52,19 @@ export function handleWebViewOnMessage(e, connector) {
 }
 
 export function useWebViewBridgeSession(handler) {
-  const [name, setName] = React.useState(null);
-  const [webViewRef, setWebViewRef] = React.useState(null);
+  const [webViewRefMap, setWebViewRefMap] = React.useState({});
 
   const dispatchEvent = React.useCallback(
     (event) => {
-      if (name && webViewRef && webViewRef.current) {
-        dispatchEventToWebView(webViewRef.current, name, event);
+      for (const sessionName of Object.keys(webViewRefMap)) {
+        const webViewRef = webViewRefMap[sessionName];
+
+        if (webViewRef && webViewRef.current) {
+          dispatchEventToWebView(webViewRef.current, sessionName, event);
+        }
       }
     },
-    [name, webViewRef],
+    [webViewRefMap]
   );
 
   const handleWebViewCall = React.useCallback(
@@ -69,15 +72,22 @@ export function useWebViewBridgeSession(handler) {
       let eventType = null;
 
       switch (event ? event.type : null) {
-        case '@react-native-webview-bridge/startSession': {
-          setName(sessionName);
-          setWebViewRef(sessionWebViewRef);
+        case "@react-native-webview-bridge/startSession": {
+          setWebViewRefMap((prevRefMap) => {
+            return {
+              ...prevRefMap,
+              [sessionName]: sessionWebViewRef,
+            }
+          });
           break;
         }
 
-        case '@react-native-webview-bridge/endSession': {
-          setName(null);
-          setWebViewRef(null);
+        case "@react-native-webview-bridge/endSession": {
+          setWebViewRefMap((prevRefMap) => {
+            const newRefMap = {...prevRefMap};
+            delete newRefMap[sessionName];
+            return newRefMap;
+          });
           break;
         }
 
@@ -87,16 +97,16 @@ export function useWebViewBridgeSession(handler) {
         }
       }
     },
-    [handler, dispatchEvent],
+    [handler, dispatchEvent]
   );
 
   const session = React.useMemo(() => {
     return {
-      valid: name && webViewRef && webViewRef.current,
+      valid: Object.keys(webViewRefMap).length > 0,
       dispatchEvent,
       handler: handleWebViewCall,
     };
-  }, [name, webViewRef, handleWebViewCall, dispatchEvent]);
+  }, [webViewRefMap, handleWebViewCall, dispatchEvent]);
 
   return session;
 }
@@ -104,8 +114,8 @@ export function useWebViewBridgeSession(handler) {
 export function useWebViewBridge(bridgeName, eventCallback) {
   const sessionName = React.useMemo(
     () =>
-      `@react-native-webview-bridge/session/${bridgeName}`,
-    [bridgeName],
+      `@react-native-webview-bridge/session/${bridgeName}-${new Date().getTime()}`,
+    [bridgeName]
   );
 
   React.useEffect(() => {
@@ -116,12 +126,12 @@ export function useWebViewBridge(bridgeName, eventCallback) {
 
     window.addEventListener(sessionName, onNativeProviderEvent);
     callNative(bridgeName, sessionName, {
-      type: '@react-native-webview-bridge/startSession',
+      type: "@react-native-webview-bridge/startSession",
     });
 
     return () => {
       callNative(bridgeName, sessionName, {
-        type: '@react-native-webview-bridge/endSession',
+        type: "@react-native-webview-bridge/endSession",
       });
       window.removeEventListener(sessionName, onNativeProviderEvent);
     };
@@ -131,7 +141,7 @@ export function useWebViewBridge(bridgeName, eventCallback) {
     (data) => {
       callNative(bridgeName, sessionName, data);
     },
-    [bridgeName, sessionName],
+    [bridgeName, sessionName]
   );
 
   return call;
@@ -156,20 +166,20 @@ function callNative(handlerName, sessionName, data = {}) {
   if (!window.ReactNativeWebView) {
     console.warn(
       `Called WebViewBridge ${handlerName}(${
-        data ? JSON.stringify(data) : ''
-      })) but Native App is missing.`,
+        data ? JSON.stringify(data) : ""
+      })) but Native App is missing.`
     );
     return;
   }
 
   window.ReactNativeWebView.postMessage(
     JSON.stringify({
-      method: '@react-native-webview-bridge/call',
+      method: "@react-native-webview-bridge/call",
       params: {
         handlerName,
         sessionName,
         data,
       },
-    }),
+    })
   );
 }
