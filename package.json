@@ -23,5 +23,10 @@
     "name": "Daehan Kim",
     "email": "daehankim@ibigtree.kr"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/react": "^17.0.31",
+    "react-native-webview": "^11.14.1"
+  }
 }
