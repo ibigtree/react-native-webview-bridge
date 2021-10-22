@@ -57,10 +57,6 @@ export function useWebViewBridgeConnector(webViewRef, sessions) {
   return handleMessage;
 }
 
-export function handleWebViewOnMessage(e, connector) {
-
-}
-
 export function useWebViewBridgeSession(callback) {
   const [webViewRefMap, setWebViewRefMap] = useState({});
   const callbackRef = useRef(callback);
