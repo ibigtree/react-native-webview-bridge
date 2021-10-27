@@ -25,6 +25,6 @@ export interface WebViewBridgeConnector {
     (e: WebViewMessageEvent): boolean;
 }
 
-export function useWebViewBridgeConnector<T = unknown>(webViewRef: React.Ref<WebView>, sessions: Record<string, WebViewBridgeSession<T>>): WebViewBridgeConnector;
+export function useWebViewBridgeConnector<T = unknown>(webViewRef: React.Ref<WebView>, sessions: T): WebViewBridgeConnector;
 export function useWebViewBridgeSession<T = unknown>(callback: WebViewBridgeSessionCallback<T>): WebViewBridgeSession<T>;
 export function useWebViewBridge<T = unknown>(bridgeName: string, eventCallback: WebViewBridgeSessionCallback<T>): (event: T) => void;
