@@ -2,8 +2,11 @@
   "name": "@ibigtree/react-native-webview-bridge",
   "version": "0.2.2",
   "description": "WebView - Web 사이 통신을 위한 Bridge",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
+    "postpublish": "yarn build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +30,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/react": "^17.0.31",
-    "react-native-webview": "^11.14.1"
+    "react-native-webview": "^11.14.1",
+    "typescript": "^4.4.4"
   }
 }
