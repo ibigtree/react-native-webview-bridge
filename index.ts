@@ -36,6 +36,10 @@ export interface WebViewBridgeSessionMap<T extends WebViewBridgeEvent> {
     [sessionName: string]: WebViewBridgeSession<T>;
 }
 
+export interface WebViewBridgeInternalEvent extends WebViewBridgeEvent {
+    type: "@react-native-webview-bridge/startSession" | "@react-native-webview-bridge/endSession" | "@react-native-webview-bridge/initializedSession"
+}
+
 export function useWebViewBridgeConnector<T extends WebViewBridgeEvent>(webViewRef: React.Ref<WebView>, sessions: WebViewBridgeSessionMap<T>): WebViewBridgeConnector {
     const sessionsRef = useRef(sessions);
 
@@ -102,7 +106,7 @@ export function useWebViewBridgeSession<T extends WebViewBridgeEvent>(callback: 
     }, [callback]);
 
     const dispatchEvent = useCallback(
-        (event: T) => {
+        (event: T | WebViewBridgeInternalEvent) => {
             for (const sessionName of Object.keys(webViewRefMap)) {
                 const webViewRef = webViewRefMap[sessionName];
 
@@ -126,6 +130,14 @@ export function useWebViewBridgeSession<T extends WebViewBridgeEvent>(callback: 
                             [sessionName]: sessionWebViewRef,
                         }
                     });
+
+                    if (sessionWebViewRef && typeof sessionWebViewRef === 'object' && sessionWebViewRef.current) {
+                        dispatchEventToWebView(
+                            sessionWebViewRef.current,
+                            sessionName,
+                            { type: "@react-native-webview-bridge/initializedSession" }
+                        );
+                    }
                     break;
                 }
 
@@ -160,6 +172,10 @@ export function useWebViewBridgeSession<T extends WebViewBridgeEvent>(callback: 
 
 export function useWebViewBridge<T extends WebViewBridgeEvent>(bridgeName: string, eventCallback: WebViewBridgeCallback<T>): (event: T) => void {
     const eventCallbackRef = useRef(eventCallback);
+    const state = useRef({
+        initialized: false,
+        queue: [] as T[],
+    });
 
     useEffect(() => {
         eventCallbackRef.current = eventCallback;
@@ -173,8 +189,18 @@ export function useWebViewBridge<T extends WebViewBridgeEvent>(bridgeName: strin
 
     useEffect(() => {
         function onWebViewBridgeSessionEvent(e: MessageEvent) {
-            const eventData = JSON.parse(e.data);
-            eventCallbackRef.current(eventData);
+            const eventData = JSON.parse(e.data) as T;
+
+            if (eventData.type === '@react-native-webview-bridge/initializedSession') {
+                // Fire all queued events
+                state.current.initialized = true;
+                state.current.queue.forEach((queuedEvent) => {
+                    callNative(bridgeName, sessionName, queuedEvent);
+                });
+                state.current.queue = [];
+            } else {
+                eventCallbackRef.current(eventData);
+            }
         }
 
         window.addEventListener(sessionName as 'message', onWebViewBridgeSessionEvent)
@@ -194,7 +220,12 @@ export function useWebViewBridge<T extends WebViewBridgeEvent>(bridgeName: strin
 
     const call = useCallback(
         (data) => {
-            callNative(bridgeName, sessionName, data);
+            if (state.current.initialized) {
+                callNative(bridgeName, sessionName, data);
+            } else {
+                // Queue event if not initialized yet
+                state.current.queue.push(data);
+            }
         },
         [bridgeName, sessionName]
     );
