@@ -1,6 +1,6 @@
 {
   "name": "@ibigtree/react-native-webview-bridge",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "WebView - Web 사이 통신을 위한 Bridge",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
