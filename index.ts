@@ -220,9 +220,9 @@ export function useWebViewBridge<T extends WebViewBridgeEvent>(
           callNative(bridgeName, sessionName, queuedEvent);
         });
         state.current.queue = [];
-      } else {
-        eventCallbackRef.current(eventData);
       }
+
+      eventCallbackRef.current(eventData);
     }
 
     window.addEventListener(
