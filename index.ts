@@ -34,12 +34,22 @@ export interface WebViewBridgeSessionMap<T extends WebViewBridgeEvent> {
   [sessionName: string]: WebViewBridgeSession<T>;
 }
 
-export interface WebViewBridgeInternalEvent extends WebViewBridgeEvent {
-  type:
-    | '@react-native-webview-bridge/startSession'
-    | '@react-native-webview-bridge/endSession'
-    | '@react-native-webview-bridge/initializedSession';
+export interface WebViewBridgeSessionInitEvent extends WebViewBridgeEvent {
+  type: '@react-native-webview-bridge/initializedSession';
 }
+
+export interface WebViewBridgeSessionStartEvent extends WebViewBridgeEvent {
+  type: '@react-native-webview-bridge/startSession';
+}
+
+export interface WebViewBridgeSessionEndEvent extends WebViewBridgeEvent {
+  type: '@react-native-webview-bridge/endSession';
+}
+
+export type WebViewBridgeInternalEvent =
+  | WebViewBridgeSessionStartEvent
+  | WebViewBridgeSessionEndEvent
+  | WebViewBridgeSessionInitEvent;
 
 export function useWebViewBridgeConnector<T extends WebViewBridgeEvent>(
   webViewRef: Ref<WebView>,
