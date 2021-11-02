@@ -248,12 +248,12 @@ export function useWebViewBridge<T extends WebViewBridgeEvent>(
       onWebViewBridgeSessionEvent,
     );
 
-    dispatchEventToNative({
+    callNative(bridgeName, sessionName, {
       type: '@react-native-webview-bridge/startSession',
     });
 
     return () => {
-      dispatchEventToNative({
+      callNative(bridgeName, sessionName, {
         type: '@react-native-webview-bridge/endSession',
       });
 
