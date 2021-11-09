@@ -195,7 +195,7 @@ export function useWebViewBridgeSession<T extends WebViewBridgeEvent>(
 
 export function useWebViewBridge<T extends WebViewBridgeEvent>(
   bridgeName: string,
-  eventCallback: WebViewBridgeCallback<T>,
+  eventCallback?: WebViewBridgeCallback<T>,
 ): (event: T) => void {
   const eventCallbackRef = useRef(eventCallback);
   const state = useRef({
@@ -240,7 +240,7 @@ export function useWebViewBridge<T extends WebViewBridgeEvent>(
         state.current.queue = [];
       }
 
-      eventCallbackRef.current(eventData, dispatchEventToNative);
+      eventCallbackRef.current?.(eventData, dispatchEventToNative);
     }
 
     window.addEventListener(
