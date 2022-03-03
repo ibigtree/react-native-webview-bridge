@@ -1,6 +1,6 @@
-import {useState, useMemo, useEffect, useCallback, useRef, Ref} from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, Ref, useContext, createContext } from 'react';
 import WebView from 'react-native-webview';
-import {WebViewMessageEvent} from 'react-native-webview/lib/WebViewTypes';
+import { WebViewMessageEvent } from 'react-native-webview/lib/WebViewTypes';
 
 declare global {
   interface Window {
@@ -47,7 +47,7 @@ export type WebViewBridgeInternalEvent =
   | WebViewBridgeSessionEndEvent
   | WebViewBridgeSessionInitEvent;
 
-export function useWebViewBridgeConnector<T extends WebViewBridgeEvent>(
+export function useWebViewBridgeConnector<T extends WebViewBridgeEvent = WebViewBridgeEvent>(
   webViewRef: Ref<WebView>,
   sessions: WebViewBridgeSessionMap<T>,
 ): WebViewBridgeConnector {
@@ -58,7 +58,7 @@ export function useWebViewBridgeConnector<T extends WebViewBridgeEvent>(
   }, [sessions]);
 
   const sessionCallback = useCallback(
-    ({handlerName, sessionName, event}) => {
+    ({ handlerName, sessionName, event }) => {
       const session = sessionsRef.current[handlerName];
 
       if (session) {
@@ -166,7 +166,7 @@ export function useWebViewBridgeSession<T extends WebViewBridgeEvent>(
 
         case '@react-native-webview-bridge/endSession': {
           setWebViewRefMap(prevRefMap => {
-            const newRefMap = {...prevRefMap};
+            const newRefMap = { ...prevRefMap };
             delete newRefMap[sessionName];
             return newRefMap;
           });
@@ -289,8 +289,7 @@ function dispatchEventToWebView(
 function callNative(handlerName: string, sessionName: string, data = {}) {
   if (!window.ReactNativeWebView) {
     console.warn(
-      `Called WebViewBridge ${handlerName}(${
-        data ? JSON.stringify(data) : ''
+      `Called WebViewBridge ${handlerName}(${data ? JSON.stringify(data) : ''
       })) but Native App is missing.`,
     );
     return;
@@ -306,4 +305,43 @@ function callNative(handlerName: string, sessionName: string, data = {}) {
       },
     }),
   );
+}
+
+interface WebViewBridgeSessionContext<T extends WebViewBridgeEvent> {
+  webViewBridgeSession: WebViewBridgeSession<T>;
+}
+
+
+export function createWebViewBridgeSessionContext<T extends WebViewBridgeEvent>(
+  useSessionContextState: () => WebViewBridgeSessionContext<T>,
+) {
+  const SessionContext = createContext<WebViewBridgeSessionContext<T> | undefined>(
+    undefined,
+  );
+
+  const useSessionContext = () => {
+    const context = useContext(SessionContext);
+
+    if (context === undefined) {
+      throw new Error(`Context ${SessionContext} Not Found`);
+    }
+
+    return context;
+  };
+
+  const SessionProvider = ({ children }: { children: React.ReactNode }) => {
+    const state = useSessionContextState();
+
+    return (
+      <SessionContext.Provider value={state}>
+        {children}
+      </SessionContext.Provider>
+    );
+  };
+
+  return {
+    useSessionContext,
+    SessionProvider,
+    SessionContext,
+  };
 }

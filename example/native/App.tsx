@@ -13,6 +13,7 @@ import {
   useWebViewBridgeSession,
   WebViewBridgeEvent,
   useWebViewBridgeConnector,
+  createWebViewBridgeSessionContext,
 } from '@ibigtree/react-native-webview-bridge';
 
 interface TestBridgeRequestEvent extends WebViewBridgeEvent {
@@ -35,10 +36,7 @@ type TestBridgeEvent =
   | TestBridgeResponseEvent
   | TestBridgeTickEvent;
 
-function App() {
-  const webViewRef = useRef<WebView>(null);
-
-  // Create native session
+function useTestBridge() {
   const testBridgeSession = useWebViewBridgeSession<TestBridgeEvent>(
     (event, dispatchEvent) => {
       switch (event.type) {
@@ -51,6 +49,30 @@ function App() {
       }
     },
   );
+
+  return {webViewBridgeSession: testBridgeSession};
+}
+
+const {
+  // SessionContext: TestBridgeContext,
+  SessionProvider: TestBridgeSessionProvider,
+  useSessionContext: useTestBridgeContext,
+} = createWebViewBridgeSessionContext(useTestBridge);
+
+function App() {
+  return (
+    <SafeAreaView style={StyleSheet.absoluteFill}>
+      <TestBridgeSessionProvider>
+        <WebViewScreen />
+      </TestBridgeSessionProvider>
+    </SafeAreaView>
+  );
+}
+
+const WebViewScreen = () => {
+  const webViewRef = useRef<WebView>(null);
+
+  const {webViewBridgeSession: testBridgeSession} = useTestBridgeContext();
 
   // Send Message lazily/without request
   useEffect(() => {
@@ -70,24 +92,22 @@ function App() {
     };
   }, [testBridgeSession]);
 
-  const handleMessage = useWebViewBridgeConnector(webViewRef, {
+  const handleMessage = useWebViewBridgeConnector<TestBridgeEvent>(webViewRef, {
     TestBridge: testBridgeSession,
   });
 
   return (
-    <SafeAreaView style={StyleSheet.absoluteFill}>
-      <WebView
-        ref={webViewRef}
-        source={{uri: 'http://127.0.0.1:3000'}}
-        onMessage={e => {
-          if (handleMessage(e)) {
-            // Already handled WebViewBridge messages
-            return;
-          }
-        }}
-      />
-    </SafeAreaView>
+    <WebView
+      ref={webViewRef}
+      source={{uri: 'http://127.0.0.1:3000'}}
+      onMessage={e => {
+        if (handleMessage(e)) {
+          // Already handled WebViewBridge messages
+          return;
+        }
+      }}
+    />
   );
-}
+};
 
 export default App;
